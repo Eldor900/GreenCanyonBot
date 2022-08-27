@@ -6,12 +6,14 @@ import telebot
 import time
 from telebot import types
 from flask import Flask, request
+import os
 
 
 
 API_KEY = '5710613073:AAGXeCjp48xycIxKGllcXUYISZ-ncFXmGy0' 
 APP_URL = f'https://green-canyon-bot.herokuapp.com/'
 bot = telebot.TeleBot(API_KEY)
+server = Flask(__name__)
 
 
 
@@ -534,5 +536,20 @@ def views(message):
      bot.send_photo(chatId, ve14)
 
 
+@server.route('/' + API_KEY, methods=['POST'])
+def get_message():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return '!', 200
 
-bot.polling()
+
+@server.route('/')
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url=APP_URL)
+    return '!', 200
+
+
+if __name__ == '__main__':
+    server.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
